@@ -1,12 +1,12 @@
 # 📱 Generosity Gateway
 
-Generosity Gateway is an Android application developed to connect donors with recipients in a secure and efficient way. The application streamlines the donation process by matching donors with recipients based on requested items, while maintaining user privacy and providing an easy-to-use mobile experience.
+Generosity Gateway is an Android application developed to connect donors with recipients in a secure and efficient way. The application streamlines the donation process by matching donors with recipients efficiently and securely.
 
 ---
 
 ## 🚀 Project Overview
 
-The application allows users to register as either donors or recipients. Recipients can request items from a predefined list, while donors can browse matching requests and donate available items. The system securely manages user authentication, donation transactions, request history, donor rankings, and recipient information.
+The application allows users to register as either donors or recipients. Recipients can request items from a predefined list, while donors can browse matching requests and donate available items. The application matches donors with recipients based on their location and item availability, making the donation process seamless and convenient.
 
 ---
 
@@ -20,6 +20,14 @@ The application allows users to register as either donors or recipients. Recipie
 - 🏆 Donor leaderboard
 - 👤 Recipient profiles and biographies
 - 📱 Simple and intuitive Android user interface
+
+---
+
+## 🎥 Project Demonstration
+
+A demonstration video of the application is available here:
+
+- 🎬 [Watch the demo](./demo/Generosity-Gateway-Demo.mp4)
 
 ---
 
@@ -90,6 +98,5 @@ Through this project, I gained practical experience in:
 - Version control using Git and GitHub
 
 ---
-
 
 
