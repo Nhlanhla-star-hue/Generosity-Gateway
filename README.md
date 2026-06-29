@@ -50,7 +50,7 @@ This application was developed as part of a **university group project** by a te
 
 ## 📄 Documentation
 
-- 📘 [Business Rules](./documentation/Business Rules(1).pdf)
+- 📘 [Business Rules](./documentation/Business Rules (1).pdf)
 
 ---
 
