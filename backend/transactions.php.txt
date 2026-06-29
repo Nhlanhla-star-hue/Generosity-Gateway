@@ -1,0 +1,103 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+
+$link = new mysqli("127.0.0.1", $username, $password, $database);
+
+if ($link->connect_error) {
+    die("Connection failed: " . $link->connect_error);
+}
+
+$request_id = $_REQUEST['request_id'];
+$item_quantity_received = $_REQUEST['item_quantity'];
+$donor_username = $_REQUEST['donor_username'];
+
+if ($item_quantity_received <= 0) {
+    die("Error: The item quantity received must be greater than 0.");
+}
+
+$sql_fetch_user_id = $link->prepare("SELECT USER_ID FROM USERS WHERE USERNAME = ?");
+$sql_fetch_user_id->bind_param("s", $donor_username);
+$sql_fetch_user_id->execute();
+$result_user_id = $sql_fetch_user_id->get_result();
+
+if ($result_user_id) {
+    if ($result_user_id->num_rows > 0) {
+        $row_user_id = $result_user_id->fetch_assoc();
+        $donor_id = $row_user_id['USER_ID'];
+
+        $sql_fetch_user_id->close();
+        $sql_check_donor = $link->prepare("SELECT * FROM DONORS WHERE DONOR_ID = ?");
+        $sql_check_donor->bind_param("i", $donor_id);
+        $sql_check_donor->execute();
+        $result_check_donor = $sql_check_donor->get_result();
+
+        if ($result_check_donor->num_rows == 0) {
+            // Donor does not exist in DONORS table, insert the donor
+            $sql_insert_donor = $link->prepare("INSERT INTO DONORS (DONOR_ID, TOT_QUANTITY) VALUES (?, 0)");
+            $sql_insert_donor->bind_param("i", $donor_id);
+            if (!$sql_insert_donor->execute()) {
+                echo "Error inserting new donor: " . $sql_insert_donor->error;
+                $sql_check_donor->close();
+                $sql_insert_donor->close();
+                exit;
+            }
+            $sql_insert_donor->close();
+        } else {
+            $sql_check_donor->close();
+        }
+
+        $sql_check_quantity = $link->prepare("SELECT ITEM_QUANTITY FROM REQUESTS WHERE REQUEST_ID = ?");
+        $sql_check_quantity->bind_param("i", $request_id);
+        $sql_check_quantity->execute();
+        $result_check_quantity = $sql_check_quantity->get_result();
+        $row_check_quantity = $result_check_quantity->fetch_assoc();
+        $current_item_quantity = $row_check_quantity['ITEM_QUANTITY'];
+
+        if ($current_item_quantity >= $item_quantity_received) {
+            $sql_check_quantity->close();
+
+            $sql_insert_transaction = $link->prepare("INSERT INTO TRANSACTIONS (REQUEST_ID, ITEM_RECEIVED_QUANTITY, DONOR_ID) VALUES (?, ?, ?)");
+            $sql_insert_transaction->bind_param("iii", $request_id, $item_quantity_received, $donor_id);
+
+            if ($sql_insert_transaction->execute()) {
+                $sql_insert_transaction->close();
+
+                $sql_update_request = $link->prepare("UPDATE REQUESTS SET ITEM_QUANTITY = ITEM_QUANTITY - ? WHERE REQUEST_ID = ?");
+                $sql_update_request->bind_param("ii", $item_quantity_received, $request_id);
+
+                if ($sql_update_request->execute()) {
+                    $sql_update_request->close();
+
+                    $sql_update_donor = $link->prepare("UPDATE DONORS SET TOT_QUANTITY = TOT_QUANTITY + ? WHERE DONOR_ID = ?");
+                    $sql_update_donor->bind_param("ii", $item_quantity_received, $donor_id);
+                    if ($sql_update_donor->execute()) {
+                        echo "Transaction successfully recorded, request updated, and donor total quantity updated.";
+                    } else {
+                        echo "Error updating donor total quantity: " . $sql_update_donor->error;
+                    }
+                    $sql_update_donor->close();
+                } else {
+                    echo "Error updating request item quantity: " . $sql_update_request->error;
+                    $sql_update_request->close();
+                }
+            } else {
+                echo "Error inserting transaction: " . $sql_insert_transaction->error;
+                $sql_insert_transaction->close();
+            }
+        } else {
+            echo "Error: The item quantity received exceeds the current item quantity.";
+            $sql_check_quantity->close();
+        }
+    } else {
+        echo "No user found with the username: $donor_username";
+        $sql_fetch_user_id->close();
+    }
+} else {
+    echo "Error fetching user ID: " . $sql_fetch_user_id->error;
+    $sql_fetch_user_id->close();
+}
+
+$link->close();
+?>

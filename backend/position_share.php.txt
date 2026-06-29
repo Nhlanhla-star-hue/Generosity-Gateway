@@ -1,0 +1,66 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$conn = mysqli_connect("127.0.0.1", $username, $password, $database);
+
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$SPECIFIC_USERNAME = $_REQUEST['USERNAME'];
+
+$sql_user_check = "SELECT USER_ID FROM USERS WHERE BINARY USERNAME = ?";
+$stmt_user_check = mysqli_prepare($conn, $sql_user_check);
+mysqli_stmt_bind_param($stmt_user_check, "s", $SPECIFIC_USERNAME);
+mysqli_stmt_execute($stmt_user_check);
+$result_user_check = mysqli_stmt_get_result($stmt_user_check);
+
+if ($result_user_check && mysqli_num_rows($result_user_check) > 0) {
+    $sql_rank = "SELECT u.USERNAME, d.TOT_QUANTITY
+                 FROM DONORS d
+                 JOIN USERS u ON d.DONOR_ID = u.USER_ID
+                 ORDER BY d.TOT_QUANTITY DESC";
+    $result_rank = mysqli_query($conn, $sql_rank);
+
+    $user_info = null;
+
+    if ($result_rank) {
+        $rank = 1;
+        $specificUserFound = false;
+
+        while ($row = mysqli_fetch_assoc($result_rank)) {
+            if (strcasecmp($SPECIFIC_USERNAME, $row['USERNAME']) === 0) {
+                $user_info = [
+                    'rank' => $rank,
+                    'username' => $row['USERNAME'],
+                    'totalQuantity' => (string) $row['TOT_QUANTITY']
+                ];
+                $specificUserFound = true;
+                break;
+            }
+            $rank++;
+        }
+
+        mysqli_free_result($result_rank);
+
+        if (!$specificUserFound) {
+            $user_info = [
+                'rank' => $rank,
+                'username' => $SPECIFIC_USERNAME,
+                'totalQuantity' => '0'
+            ];
+        }
+    }
+
+    mysqli_stmt_close($stmt_user_check);
+    mysqli_close($conn);
+
+    header('Content-Type: application/json');
+    echo json_encode($user_info);
+} else {
+    echo "Error: User not found in the USERS table.";
+    mysqli_stmt_close($stmt_user_check);
+    mysqli_close($conn);
+}
+?>

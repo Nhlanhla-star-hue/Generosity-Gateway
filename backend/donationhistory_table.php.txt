@@ -1,0 +1,42 @@
+<?php
+
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$link = mysqli_connect("127.0.0.1", $username, $password, $database);
+
+if (!$link) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$DONOR_ID = $_REQUEST["DONOR_ID"];
+$DONOR_ID = mysqli_real_escape_string($link, $DONOR_ID);
+
+$query = "
+    SELECT r.ITEM, t.ITEM_RECEIVED_QUANTITY, u.USERNAME AS RECIPIENT_NAME
+    FROM TRANSACTIONS t
+    INNER JOIN REQUESTS r ON t.REQUEST_ID = r.REQUEST_ID
+    INNER JOIN USERS u ON r.RECIPIENT_ID = u.USER_ID
+    WHERE t.DONOR_ID = ?
+";
+$stmt = mysqli_prepare($link, $query);
+mysqli_stmt_bind_param($stmt, "i", $DONOR_ID);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+$response = array();
+
+if ($result) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $response[] = $row;
+    }
+} else {
+    $response["error"] = "Error querying the database: " . mysqli_error($link);
+}
+
+echo json_encode($response);
+
+mysqli_stmt_close($stmt);
+mysqli_close($link);
+
+?>

@@ -1,0 +1,77 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$link = mysqli_connect("127.0.0.1", $username, $password, $database);
+
+if (!$link) {
+    die('Connection error: ' . mysqli_connect_error());
+}
+
+$selected_item = mysqli_real_escape_string($link, $_REQUEST["SELECTED_ITEM"]);
+$donor_username = mysqli_real_escape_string($link, $_REQUEST["DONOR_USERNAME"]);
+
+if (empty($selected_item) || empty($donor_username)) {
+    die('Missing required parameters.');
+}
+
+$query_find_user_id = "SELECT USER_ID FROM USERS WHERE USERNAME = '$donor_username'";
+$result_find_user_id = mysqli_query($link, $query_find_user_id);
+
+if (!$result_find_user_id) {
+    die('Error in query (find user ID): ' . mysqli_error($link));
+}
+
+if (mysqli_num_rows($result_find_user_id) > 0) {
+    $row_user_id = mysqli_fetch_assoc($result_find_user_id);
+    $donor_user_id = $row_user_id["USER_ID"];
+
+    $query_search_requests = "
+        SELECT REQUESTS.REQUEST_ID, RECIPIENT_ID, REQUESTS.ITEM_QUANTITY
+        FROM REQUESTS
+        WHERE REQUESTS.ITEM = '$selected_item' AND REQUESTS.ITEM_QUANTITY > 0 AND REQUESTS.RECIPIENT_ID != '$donor_user_id'";
+    $result_search_requests = mysqli_query($link, $query_search_requests);
+
+    if (!$result_search_requests) {
+        die('Error in query (search requests): ' . mysqli_error($link));
+    }
+
+    if (mysqli_num_rows($result_search_requests) > 0) {
+        $output = "";
+
+        while ($row = mysqli_fetch_assoc($result_search_requests)) {
+            $request_id = $row["REQUEST_ID"];
+            $quantity = $row["ITEM_QUANTITY"];
+            $recipient_id = $row["RECIPIENT_ID"];
+
+            $query_find_recipient_details = "
+                SELECT USERS.USERNAME, USERS.CELL_NO, USERS.EMAIL, RECIPIENTS.BIO
+                FROM USERS
+                JOIN RECIPIENTS ON USERS.USER_ID = RECIPIENTS.RECIPIENT_ID
+                WHERE USERS.USER_ID = '$recipient_id'";
+            $result_find_recipient_details = mysqli_query($link, $query_find_recipient_details);
+
+            if (!$result_find_recipient_details) {
+                die('Error in query (find recipient details): ' . mysqli_error($link));
+            }
+
+            if (mysqli_num_rows($result_find_recipient_details) > 0) {
+                $recipient_row = mysqli_fetch_assoc($result_find_recipient_details);
+                $recipient_username = $recipient_row["USERNAME"];
+                $recipient_bio = $recipient_row["BIO"];
+                $recipient_cell_no = $recipient_row["CELL_NO"];
+                $recipient_email = $recipient_row["EMAIL"];
+
+                $output .= "Request ID: $request_id| Username: $recipient_username| Quantity: $quantity| Bio: $recipient_bio| Cell: $recipient_cell_no| Email: $recipient_email\n";
+            }
+        }
+        echo $output;
+    } else {
+        echo "No requests found for the specified item.";
+    }
+} else {
+    echo "User not found.";
+}
+
+mysqli_close($link);
+?>

@@ -1,0 +1,56 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$link = new mysqli("127.0.0.1", $username, $password, $database);
+
+if ($link->connect_error) {
+    die("Connection failed: " . $link->connect_error);
+}
+
+$USERNAME = $_REQUEST["USERNAME"];
+$EMAIL = $_REQUEST["EMAIL"];
+$CELL_NO = $_REQUEST["CELL_NO"];
+$PASSWORD = $_REQUEST["PASSWORD"];
+
+if (strpos($USERNAME, ' ') !== false || strpos($EMAIL, ' ') !== false || strpos($CELL_NO, ' ') !== false) {
+    echo "Input should not contain spaces. Please remove any spaces and try again.";
+} else {
+    $HASHED_PASS = password_hash($PASSWORD, PASSWORD_DEFAULT);
+
+    $stmt_username = $link->prepare("SELECT * FROM USERS WHERE USERNAME=?");
+    $stmt_username->bind_param("s", $USERNAME);
+    $stmt_username->execute();
+    $result_username = $stmt_username->get_result();
+    $numRows_username = $result_username->num_rows;
+    $stmt_username->close();
+
+    $stmt_email = $link->prepare("SELECT * FROM USERS WHERE EMAIL=?");
+    $stmt_email->bind_param("s", $EMAIL);
+    $stmt_email->execute();
+    $result_email = $stmt_email->get_result();
+    $numRows_email = $result_email->num_rows;
+    $stmt_email->close();
+
+    if ($numRows_username > 0 && $numRows_email > 0) {
+        echo "Both username and email already exist";
+    } elseif ($numRows_username > 0) {
+        echo "Username is already taken";
+    } elseif ($numRows_email > 0) {
+        echo "Email already exists";
+    } else {
+        $stmt_insert = $link->prepare("INSERT INTO USERS (USERNAME, EMAIL, PASSWORD, CELL_NO) VALUES (?, ?, ?, ?)>        $stmt_insert->bind_param("ssss", $USERNAME, $EMAIL, $HASHED_PASS, $CELL_NO);
+        if (!is_null($USERNAME) && !is_null($EMAIL) && !is_null($HASHED_PASS) && !is_null($CELL_NO)) {
+            if ($stmt_insert->execute()) {
+                echo "Sign up Successful";
+            } else {
+                echo "Sign up Unsuccessful";
+            }
+        } else {
+            echo "Error: All fields required";
+        }
+        $stmt_insert->close();
+    }
+}
+$link->close();
+?>

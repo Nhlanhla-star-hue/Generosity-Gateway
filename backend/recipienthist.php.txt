@@ -1,0 +1,79 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+
+$link = mysqli_connect("127.0.0.1", $username, $password, $database);
+
+if (!$link) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$RECIPIENT_USERNAME = $_REQUEST['RECIPIENT_USERNAME'];
+
+$sql_user_id = "SELECT USER_ID FROM USERS WHERE USERNAME = ?";
+$stmt_user_id = mysqli_prepare($link, $sql_user_id);
+mysqli_stmt_bind_param($stmt_user_id, "s", $RECIPIENT_USERNAME);
+mysqli_stmt_execute($stmt_user_id);
+$result_user_id = mysqli_stmt_get_result($stmt_user_id);
+
+if ($result_user_id && mysqli_num_rows($result_user_id) > 0) {
+    $row_user_id = mysqli_fetch_assoc($result_user_id);
+    $RECIPIENT_ID = $row_user_id['USER_ID'];
+    mysqli_stmt_close($stmt_user_id);
+
+    $sql_request_ids = "SELECT REQUEST_ID FROM REQUESTS WHERE RECIPIENT_ID = ?";
+    $stmt_request_ids = mysqli_prepare($link, $sql_request_ids);
+    mysqli_stmt_bind_param($stmt_request_ids, "i", $RECIPIENT_ID);
+    mysqli_stmt_execute($stmt_request_ids);
+    $result_request_ids = mysqli_stmt_get_result($stmt_request_ids);
+
+    $history = [];
+
+    if ($result_request_ids && mysqli_num_rows($result_request_ids) > 0) {
+        while ($row_request_ids = mysqli_fetch_assoc($result_request_ids)) {
+            $request_id = $row_request_ids['REQUEST_ID'];
+
+            $sql_transaction_info = "SELECT r.ITEM, r.INITIAL_QUANTITY, t.ITEM_RECEIVED_QUANTITY, u.USERNAME AS DONOR_USERNAME
+                                     FROM TRANSACTIONS t
+                                     INNER JOIN REQUESTS r ON t.REQUEST_ID = r.REQUEST_ID
+                                     INNER JOIN USERS u ON t.DONOR_ID = u.USER_ID
+                                     WHERE t.REQUEST_ID = ?";
+            $stmt_transaction_info = mysqli_prepare($link, $sql_transaction_info);
+            mysqli_stmt_bind_param($stmt_transaction_info, "i", $request_id);
+            mysqli_stmt_execute($stmt_transaction_info);
+            $result_transaction_info = mysqli_stmt_get_result($stmt_transaction_info);
+
+            while ($row_transaction_info = mysqli_fetch_assoc($result_transaction_info)) {
+                $history[] = [
+                    'item' => $row_transaction_info['ITEM'],
+                    'initial_quantity' => $row_transaction_info['INITIAL_QUANTITY'],
+                    'received_quantity' => $row_transaction_info['ITEM_RECEIVED_QUANTITY'],
+                    'donor_username' => $row_transaction_info['DONOR_USERNAME']
+                ];
+            }
+
+            mysqli_stmt_close($stmt_transaction_info);
+        }
+
+        mysqli_free_result($result_request_ids);
+    } else {
+        echo "The recipient has not received anything yet.";
+        mysqli_stmt_close($stmt_request_ids);
+        mysqli_close($link);
+        exit();
+    }
+
+    mysqli_stmt_close($stmt_request_ids);
+} else {
+    echo "Error: Recipient username not found.";
+    mysqli_stmt_close($stmt_user_id);
+    mysqli_close($link);
+    exit();
+}
+
+mysqli_close($link);
+
+header('Content-Type: application/json');
+echo json_encode($history);
+?>

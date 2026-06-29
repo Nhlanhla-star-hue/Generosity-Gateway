@@ -1,0 +1,47 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$link = mysqli_connect("127.0.0.1", $username, $password, $database);
+
+if (!$link) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$USERNAME = $_REQUEST["USERNAME"];
+
+$query_userid = "SELECT USER_ID FROM USERS WHERE USERNAME = ?";
+$stmt_userid = mysqli_prepare($link, $query_userid);
+
+mysqli_stmt_bind_param($stmt_userid, "s", $USERNAME);
+mysqli_stmt_execute($stmt_userid);
+$result_userid = mysqli_stmt_get_result($stmt_userid);
+
+if (mysqli_num_rows($result_userid) > 0) {
+    $row = mysqli_fetch_assoc($result_userid);
+    $userid = $row["USER_ID"];
+    mysqli_stmt_close($stmt_userid);
+
+    $query_select_bio = "SELECT BIO FROM RECIPIENTS WHERE RECIPIENT_ID = ?";
+    $stmt_select_bio = mysqli_prepare($link, $query_select_bio);
+
+    mysqli_stmt_bind_param($stmt_select_bio, "i", $userid);
+    mysqli_stmt_execute($stmt_select_bio);
+    $result_select_bio = mysqli_stmt_get_result($stmt_select_bio);
+
+    if (mysqli_num_rows($result_select_bio) > 0) {
+        while ($row_bio = mysqli_fetch_assoc($result_select_bio)) {
+            echo htmlspecialchars($row_bio["BIO"]);
+        }
+    } else {
+        echo "The recipient has no biography";
+    }
+
+    mysqli_stmt_close($stmt_select_bio);
+} else {
+    echo "User does not exist.";
+    mysqli_stmt_close($stmt_userid);
+}
+
+mysqli_close($link);
+?>

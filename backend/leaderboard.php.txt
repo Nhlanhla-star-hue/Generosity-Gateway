@@ -1,0 +1,62 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$conn = mysqli_connect("127.0.0.1", $username, $password, $database);
+
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$sql = "SELECT DONOR_ID, SUM(ITEM_RECEIVED_QUANTITY) AS total_donated
+        FROM TRANSACTIONS
+        GROUP BY DONOR_ID";
+
+$stmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+
+if ($result) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $donorId = $row['DONOR_ID'];
+        $totalDonated = $row['total_donated'];
+        $updateSql = "UPDATE DONORS SET TOT_QUANTITY = ? WHERE DONOR_ID = ?";
+        $stmt_update = mysqli_prepare($conn, $updateSql);
+        mysqli_stmt_bind_param($stmt_update, "ii", $totalDonated, $donorId);
+        mysqli_stmt_execute($stmt_update);
+        mysqli_stmt_close($stmt_update);
+    }
+    mysqli_free_result($result);
+}
+mysqli_stmt_close($stmt);
+
+$sql_rank = "SELECT u.USERNAME, d.TOT_QUANTITY
+             FROM DONORS d
+             JOIN USERS u ON d.DONOR_ID = u.USER_ID
+             ORDER BY d.TOT_QUANTITY DESC";
+
+$stmt_rank = mysqli_prepare($conn, $sql_rank);
+mysqli_stmt_execute($stmt_rank);
+$result_rank = mysqli_stmt_get_result($stmt_rank);
+
+$ranking = [];
+
+if ($result_rank) {
+    $rank = 1;
+    while ($row = mysqli_fetch_assoc($result_rank)) {
+        $ranking[] = [
+            'rank' => $rank,
+            'username' => $row['USERNAME'],
+            'totalQuantity' =>(string) $row['TOT_QUANTITY']
+        ];
+        $rank++;
+    }
+    mysqli_free_result($result_rank);
+}
+mysqli_stmt_close($stmt_rank);
+
+header('Content-Type: application/json');
+echo json_encode($ranking);
+
+mysqli_close($conn);
+?>

@@ -1,0 +1,74 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$link = mysqli_connect("127.0.0.1", $username, $password, $database);
+
+if (!$link) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$USERNAME = trim($_REQUEST["USERNAME"]);
+$BIO = trim($_REQUEST["BIO"]);
+
+if (empty($USERNAME) || empty($BIO)) {
+    echo "Username and bio are required";
+    mysqli_close($link);
+    exit();
+}
+
+$query_userid = "SELECT USER_ID FROM USERS WHERE LOWER(USERNAME) = LOWER(?)";
+$stmt_userid = mysqli_prepare($link, $query_userid);
+if ($stmt_userid) {
+    mysqli_stmt_bind_param($stmt_userid, "s", $USERNAME);
+    mysqli_stmt_execute($stmt_userid);
+    $result_userid = mysqli_stmt_get_result($stmt_userid);
+
+    if ($result_userid) {
+        if (mysqli_num_rows($result_userid) > 0) {
+            $row = mysqli_fetch_assoc($result_userid);
+            $userid = $row["USER_ID"];
+            mysqli_stmt_close($stmt_userid);
+
+            $query_check_bio = "SELECT * FROM RECIPIENTS WHERE RECIPIENT_ID=?";
+            $stmt_check_bio = mysqli_prepare($link, $query_check_bio);
+            if ($stmt_check_bio) {
+                mysqli_stmt_bind_param($stmt_check_bio, "i", $userid);
+                mysqli_stmt_execute($stmt_check_bio);
+                $result_check_bio = mysqli_stmt_get_result($stmt_check_bio);
+
+                if ($result_check_bio) {
+                    if (mysqli_num_rows($result_check_bio) > 0) {
+                        $query_update = "UPDATE RECIPIENTS SET BIO=? WHERE RECIPIENT_ID=?";
+                        $stmt_update = mysqli_prepare($link, $query_update);
+                        if ($stmt_update) {
+                            mysqli_stmt_bind_param($stmt_update, "si", $BIO, $userid);
+                            if (mysqli_stmt_execute($stmt_update)) {
+                                echo "Bio updated successfully";
+                            }
+                            mysqli_stmt_close($stmt_update);
+                        }
+                    } else {
+                        $query_insert = "INSERT INTO RECIPIENTS (RECIPIENT_ID, BIO) VALUES (?, ?)";
+                        $stmt_insert = mysqli_prepare($link, $query_insert);
+                        if ($stmt_insert) {
+                            mysqli_stmt_bind_param($stmt_insert, "is", $userid, $BIO);
+                            if (mysqli_stmt_execute($stmt_insert)) {
+                                echo "Bio inserted successfully";
+                            }
+                            mysqli_stmt_close($stmt_insert);
+                        }
+                    }
+                    mysqli_free_result($result_check_bio);
+                }
+                mysqli_stmt_close($stmt_check_bio);
+            }
+        } else {
+            echo "User does not exist";
+        }
+        mysqli_free_result($result_userid);
+    }
+}
+
+mysqli_close($link);
+?>

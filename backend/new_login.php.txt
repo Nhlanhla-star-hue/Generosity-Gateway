@@ -1,0 +1,40 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$link = new mysqli("127.0.0.1", $username, $password, $database);
+
+if ($link->connect_error) {
+    die("Connection failed: " . $link->connect_error);
+}
+$EMAIL = $_REQUEST["EMAIL"];
+$PASSWORD = $_REQUEST["PASSWORD"];
+
+if (!empty($EMAIL) && !empty($PASSWORD)) {
+    $query = $link->prepare("SELECT USER_ID, PASSWORD, USERNAME FROM USERS WHERE EMAIL = ?");
+    $query->bind_param("s", $EMAIL);
+    $query->execute();
+    $result = $query->get_result();
+
+    if ($result) {
+        $row = $result->fetch_assoc();
+
+        if ($row) {
+            $HASHED_PASSWORD = $row["PASSWORD"];
+            if (password_verify($PASSWORD, $HASHED_PASSWORD)) {
+                echo "Login Successful|" . $row["USERNAME"] . "|" . $row["USER_ID"];
+            } else {
+                echo "Incorrect Password";
+            }
+        } else {
+            echo "Incorrect Email";
+        }
+    } else {
+        echo "Error: " . $link->error;
+    }
+    $query->close();
+} else {
+    echo "Error: Email and Password are required";
+}
+$link->close();
+?>

@@ -1,0 +1,63 @@
+<?php
+$username = "s2544615";
+$password = "s2544615";
+$database = "d2544615";
+$link = mysqli_connect("127.0.0.1", $username, $password, $database);
+
+if (!$link) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$ITEM = $_REQUEST["ITEM"];
+$USERNAME = $_REQUEST["USERNAME"];
+$ITEM_QUANTITY = $_REQUEST["ITEM_QUANTITY"];
+
+$query_recipient_id = "SELECT USER_ID FROM USERS WHERE USERNAME = ?";
+$stmt_recipient_id = mysqli_prepare($link, $query_recipient_id);
+mysqli_stmt_bind_param($stmt_recipient_id, "s", $USERNAME);
+mysqli_stmt_execute($stmt_recipient_id);
+$result_recipient_id = mysqli_stmt_get_result($stmt_recipient_id);
+
+if ($row = mysqli_fetch_assoc($result_recipient_id)) {
+    $RECIPIENT_ID = $row["USER_ID"];
+    mysqli_stmt_close($stmt_recipient_id);
+
+    $query_check_bio = "SELECT BIO FROM RECIPIENTS WHERE RECIPIENT_ID = ?";
+    $stmt_check_bio = mysqli_prepare($link, $query_check_bio);
+    mysqli_stmt_bind_param($stmt_check_bio, "i", $RECIPIENT_ID);
+    mysqli_stmt_execute($stmt_check_bio);
+    $result_check_bio = mysqli_stmt_get_result($stmt_check_bio);
+
+    if (mysqli_num_rows($result_check_bio) > 0) {
+        mysqli_stmt_close($stmt_check_bio);
+
+        $query_check_request = "SELECT * FROM REQUESTS WHERE RECIPIENT_ID = ? AND ITEM = ?";
+        $stmt_check_request = mysqli_prepare($link, $query_check_request);
+        mysqli_stmt_bind_param($stmt_check_request, "is", $RECIPIENT_ID, $ITEM);
+        mysqli_stmt_execute($stmt_check_request);
+        $result_check_request = mysqli_stmt_get_result($stmt_check_request);
+
+        if(mysqli_num_rows($result_check_request) > 0){
+            echo "Request already exists for the same item";
+        } else {
+            mysqli_stmt_close($stmt_check_request);
+
+            $query_insert_request = "INSERT INTO REQUESTS (RECIPIENT_ID, ITEM, ITEM_QUANTITY, INITIAL_QUANTITY) VALUES (?, ?, ?, ?)";
+            $stmt_insert_request = mysqli_prepare($link, $query_insert_request);
+            mysqli_stmt_bind_param($stmt_insert_request, "isii", $RECIPIENT_ID, $ITEM, $ITEM_QUANTITY, $ITEM_QUANTITY);
+
+            if(mysqli_stmt_execute($stmt_insert_request)){
+                echo "Request submitted successfully";
+            } else {
+                echo "Request unsuccessful: " . mysqli_error($link);
+            }
+            mysqli_stmt_close($stmt_insert_request);
+        }
+    } else {
+        echo "Please enter a bio";
+        mysqli_stmt_close($stmt_check_bio);
+    }
+}
+
+mysqli_close($link);
+?>
