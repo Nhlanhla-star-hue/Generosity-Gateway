@@ -27,7 +27,7 @@ The application allows users to register as either donors or recipients. Recipie
 
 A demonstration video of the application is available here:
 
-- 🎬 [Watch the demo](./demo/Generosity-Gateway-Demo.mp4)
+- 🎬 [Watch the demo](./demo/GG Video.mp4)
 
 ---
 
