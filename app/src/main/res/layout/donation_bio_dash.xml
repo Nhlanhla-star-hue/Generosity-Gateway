@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/purple">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/cantora_one_regular"
+        android:padding="8sp"
+        android:text="Details for donation"
+        android:textColor="@color/black"
+        android:textSize="41sp" />
+
+    <TextView
+        android:id="@+id/username_text_view"
+        android:layout_width="307dp"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="Username"
+        android:textColor="@color/black"
+        android:textSize="25sp" />
+
+    <TextView
+        android:id="@+id/bio_text_view"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:padding="8dp"
+        android:textColor="@color/black"
+        android:text="Bio"
+        android:textSize="18sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:padding="8sp"
+        android:textColor="@color/black"
+        android:text="Contact Details"
+        />
+
+    <TextView
+        android:id="@+id/cell_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:text="Cell"
+        android:textColor="@color/black"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/email_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:textColor="@color/black"
+        android:text="Email"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/btn_make_dono"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/loginbuttons"
+        android:text="Make a donation"
+        android:textColor="@color/white" />
+
+</LinearLayout>

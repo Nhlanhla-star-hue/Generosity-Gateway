@@ -1,0 +1,10 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.GenerosityGateway" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/purple</item> -->
+    </style>
+
+    <style name="Theme.GenerosityGateway" parent="Theme.AppCompat.Light.NoActionBar"/>
+
+</resources>
